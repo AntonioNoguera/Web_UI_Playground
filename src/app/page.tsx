@@ -1,101 +1,198 @@
+"use client";
+
+import { JSX, useState } from "react";
+import { motion, AnimatePresence, useScroll } from "framer-motion";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+export default function Playground(): JSX.Element {
+  const [isVisible, setIsVisible] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const { scrollYProgress } = useScroll();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const boxVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1 },
+  };
+
+  const textVariants = {
+    hidden: { opacity: 0, y: -50 }, // Cambiado para que aparezcan de arriba hacia abajo
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    }),
+  };
+
+
+
+  return (
+
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-8">
+      {/* Barra de Progreso Scroll */}
+
+      <motion.div
+        className="fixed top-0 left-0 w-full bg-blue-600 text-white shadow-md"
+
+        style={{ scaleX: scrollYProgress, background: "purple", height: 10, width: "100%" }}
+      />
+
+      {/* Animación de Entrada */}
+      <motion.h1
+        className="text-4xl font-bold mb-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Framer Motion Playground
+      </motion.h1>
+
+      {/* Hover y Tap */}
+      <motion.button
+        className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        Hover & Click Me
+      </motion.button>
+
+      {/* Animación Repetitiva */}
+      <motion.div
+        className="w-32 h-32 bg-green-500 rounded-lg"
+        animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+
+      {/* Variants */}
+      <motion.div
+        className="w-40 h-40 bg-red-500 rounded-lg"
+        variants={boxVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.5 }}
+      >
+        Variants Example
+      </motion.div>
+
+      {/* Drag */}
+      <motion.div
+        className="w-20 h-20 bg-yellow-500 rounded-full cursor-move"
+        drag
+        dragConstraints={{ left: -100, right: 100, top: -50, bottom: 50 }}
+      />
+
+      {/* Layout Animations */}
+      <motion.div layout className="flex flex-col items-center">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="px-4 py-2 bg-indigo-500 text-white rounded-md mb-2"
+        >
+          Toggle Expand
+        </button>
+        {expanded && (
+          <motion.div layout className="bg-indigo-300 p-4 rounded-md">
+            Contenido Expandido
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* AnimatePresence */}
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="px-4 py-2 bg-teal-500 text-white rounded-md"
+      >
+        Toggle Visibility
+      </button>
+
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            className="w-40 h-20 bg-teal-300 rounded-md mt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            ¡Desaparezco suavemente!
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.svg
+        width="200"
+        height="200"
+        viewBox="0 0 200 200"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <motion.path
+          d="M10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80"
+          fill="transparent"
+          stroke="black"
+          strokeWidth="2"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+        />
+      </motion.svg>
+
+      <motion.div
+        style={{
+          y: scrollYProgress,
+          background: "linear-gradient(135deg, #ff9a9e, #fad0c4)",
+          height: "300px",
+          width: "100%",
+        }}
+      />
+
+      <motion.div
+        className="w-32 h-32 bg-purple-500"
+        drag="x"
+        dragElastic={0.5}
+        onDragEnd={(event, info) => {
+          if (info.offset.x > 100) alert("¡Swipe a la derecha!");
+        }}
+      />
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0, x: -50 },
+          visible: { opacity: 1, x: 0, transition: { delay: 0.5 } },
+        }}
+      />
+
+      <motion.div layoutId="shared-element" className="w-40 h-40 bg-pink-400" />
+
+      <motion.h1
+        initial={{ opacity: 0, x: -100 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1, delayChildren: 0.3, staggerChildren: 0.1 }}
+      >
+        {["H", "e", "l", "l", "o"].map((char, index) => (
+          <motion.span key={index}>{char}</motion.span>
+        ))}
+      </motion.h1>
+
+      {/* Animación de Texto Compleja */}
+      <motion.h1
+        className="text-5xl font-extrabold text-center mb-16 bg-gray-100  py-5"
+        initial="hidden"
+        animate="visible"
+      >
+        {"Framer Motion".split("").map((char, index) => (
+          <motion.span key={index} custom={index} variants={textVariants}>
+            {char === " " ? "\u00A0" : char}
+          </motion.span>
+        ))}
+      </motion.h1>
+
+
+
+
     </div>
   );
 }
