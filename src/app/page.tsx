@@ -1,9 +1,11 @@
-"use client";
+
+/**  
+ * "use client";
 
 import { JSX, useState } from "react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import Image from "next/image";
-
+ * 
 export default function Playground(): JSX.Element {
   const [isVisible, setIsVisible] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -31,16 +33,14 @@ export default function Playground(): JSX.Element {
 
   return (
 
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-8">
-      {/* Barra de Progreso Scroll */}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 gap-8"> 
 
       <motion.div
         className="fixed top-0 left-0 w-full bg-blue-600 text-white shadow-md"
 
         style={{ scaleX: scrollYProgress, background: "purple", height: 10, width: "100%" }}
       />
-
-      {/* Animación de Entrada */}
+ 
       <motion.h1
         className="text-4xl font-bold mb-4"
         initial={{ opacity: 0, y: -20 }}
@@ -50,7 +50,6 @@ export default function Playground(): JSX.Element {
         Framer Motion Playground
       </motion.h1>
 
-      {/* Hover y Tap */}
       <motion.button
         className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600"
         whileHover={{ scale: 1.1 }}
@@ -59,14 +58,12 @@ export default function Playground(): JSX.Element {
         Hover & Click Me
       </motion.button>
 
-      {/* Animación Repetitiva */}
       <motion.div
         className="w-32 h-32 bg-green-500 rounded-lg"
         animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
       />
 
-      {/* Variants */}
       <motion.div
         className="w-40 h-40 bg-red-500 rounded-lg"
         variants={boxVariants}
@@ -77,14 +74,12 @@ export default function Playground(): JSX.Element {
         Variants Example
       </motion.div>
 
-      {/* Drag */}
       <motion.div
         className="w-20 h-20 bg-yellow-500 rounded-full cursor-move"
         drag
         dragConstraints={{ left: -100, right: 100, top: -50, bottom: 50 }}
       />
 
-      {/* Layout Animations */}
       <motion.div layout className="flex flex-col items-center">
         <button
           onClick={() => setExpanded(!expanded)}
@@ -99,7 +94,6 @@ export default function Playground(): JSX.Element {
         )}
       </motion.div>
 
-      {/* AnimatePresence */}
       <button
         onClick={() => setIsVisible(!isVisible)}
         className="px-4 py-2 bg-teal-500 text-white rounded-md"
@@ -177,7 +171,6 @@ export default function Playground(): JSX.Element {
         ))}
       </motion.h1>
 
-      {/* Animación de Texto Compleja */}
       <motion.h1
         className="text-5xl font-extrabold text-center mb-16 bg-gray-100  py-5"
         initial="hidden"
@@ -196,3 +189,91 @@ export default function Playground(): JSX.Element {
     </div>
   );
 }
+*/
+// app/page.tsx 
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import styles from "./page.module.css";
+
+const Home: React.FC = () => {
+  const [activeSection, setActiveSection] = useState(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const options = {
+      root: null,
+      threshold: 0.5,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = Number(entry.target.getAttribute("data-index"));
+          setActiveSection(index);
+        }
+      });
+    }, options);
+
+    sectionRefs.current.forEach((section) => {
+      if (section) observer.observe(section);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.fixedBackground} />
+
+      <div className={styles.stickyContainer}>
+        {activeSection === 0 && (
+          <div className={styles.content}>
+            <h1>Contenido A</h1>
+            <p>Este es el contenido de la sección 1.</p>
+          </div>
+        )}
+        {activeSection === 1 && (
+          <div className={styles.content}>
+            <h1>Contenido B</h1>
+            <p>Este es el contenido de la sección 2.</p>
+          </div>
+        )}
+        {activeSection === 2 && (
+          <div className={styles.content}>
+            <h1>Contenido C</h1>
+            <p>Este es el contenido de la sección 3.</p>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.scrollSections}>
+        <div
+          data-index="0"
+          ref={(el) => { sectionRefs.current[0] = el; }}
+          className={styles.section}
+        >
+          <p>Sección 1 (Desliza hacia abajo)</p>
+        </div>
+        <div
+          data-index="1"
+          ref={(el) => { sectionRefs.current[1] = el; }}
+          className={styles.section}
+        >
+          <p>Sección 2 (Desliza hacia abajo)</p>
+        </div>
+        <div
+          data-index="2"
+          ref={(el) => { sectionRefs.current[2] = el; }}
+          className={styles.section}
+        >
+          <p>Sección 3 (Fin del scroll)</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;

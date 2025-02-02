@@ -1,0 +1,56 @@
+/* app/page.module.css */
+
+.container {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fondo fijo: se queda en el mismo lugar mientras se hace scroll */
+.fixedBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://cdn.pixabay.com/photo/2015/05/08/22/04/wallpaper-758922_960_720.png') no-repeat center center;
+  background-size: cover;
+  z-index: -1;
+}
+
+/* Contenedor sticky: permanece visible en la parte superior del viewport */
+.stickyContainer {
+  position: sticky;
+  top: 0;
+  height: 100vh; /* ocupa toda la altura del viewport */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ccc;
+  z-index: 1;
+}
+
+/* Estilos para el contenido del contenedor sticky */
+.content {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8); /* fondo semitransparente */
+  border-radius: 8px;
+}
+
+/* Secciones de scroll que se usan para detectar la posición */
+.scrollSections {
+  position: relative;
+   
+  z-index: 2; /* por encima del fondo, pero debajo del stickyContainer si es necesario */
+}
+
+.section {
+  height: 100vh; /* cada sección ocupa una pantalla completa */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  /* Opcional: un poco de margen o un color de fondo para diferenciar */
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid #ccc;
+}
