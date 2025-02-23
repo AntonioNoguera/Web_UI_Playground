@@ -195,6 +195,7 @@ export default function Playground(): JSX.Element {
 
 import React, { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Home: React.FC = () => {
   const [activeSection, setActiveSection] = useState(0);
@@ -272,6 +273,44 @@ const Home: React.FC = () => {
           <p>Sección 3 (Fin del scroll)</p>
         </div>
       </div>
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.2 },
+          },
+        }}
+      >
+        {["A", "B", "C", "D", "E"].map((letter, index) => (
+          <motion.span key={index} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+            {letter}
+          </motion.span>
+        ))}
+      </motion.div>
+
+      <AnimatePresence>
+        {true && (
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50, rotate: 90 }}
+            transition={{ duration: 0.5 }}
+            className="bg-red-500 w-40 h-20 rounded-lg"
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.svg width="100" height="10">
+        <motion.line
+          x1="0" y1="5" x2="100" y2="5"
+          stroke="blue" strokeWidth="5"
+          style={{ pathLength: scrollYProgress }}
+        />
+      </motion.svg>
     </div>
   );
 };
