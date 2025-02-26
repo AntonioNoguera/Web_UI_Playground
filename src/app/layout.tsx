@@ -9,6 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <li><Link href="/">Inicio</Link></li>
             <li><Link href="/enterAnimation">Acerca de</Link></li> 
             <li><Link href="/gestures">Gestos</Link></li>
+            <li><Link href="/scrollOriented">Scroll</Link></li>
           </ul>
         </nav>
         <main>{children}</main>
