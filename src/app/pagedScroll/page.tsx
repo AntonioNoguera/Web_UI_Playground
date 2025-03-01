@@ -22,7 +22,7 @@ function Image({ id }: { id: number }) {
         <section className="img-container">
             <div ref={ref}>
                 <img
-                    src={`/photos/cityscape/${id}.jpg`}
+                    src={`https://placehold.co/200x200/EEE/31343C`}
                     alt="A London skyscraper"
                 />
             </div>
