@@ -16,29 +16,55 @@ const BackgroundVideo: React.FC<{ videoSrc: string }> = ({ videoSrc }) => {
 
 const PageContent: React.FC = () => {
   const [videoSrc, setVideoSrc] = useState("/video.mp4");
-  const blueSectionRef = useRef<HTMLDivElement | null>(null);
+  const [isSection2Active, setIsSection2Active] = useState(false);
 
+  const firstSectionRef = useRef<HTMLDivElement | null>(null);
+  const secondSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Observador para detectar la sección 2 (puente)
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          console.log("BLUE SECTION TRIGGERED");
-          setVideoSrc("/video2.mp4"); // Cambia el video cuando esta sección aparece
+          console.log("Sección 2 activa");
+          setIsSection2Active(true);
+          setVideoSrc("/video2.mp4"); // Cambia el fondo al pasar por la sección 2
         }
       },
-      {
-        root: null,
-        threshold: 0.6, // Detecta cuando al menos el 60% de la sección está visible
-      }
+      { root: null, threshold: 0.6 } // Detecta cuando al menos el 60% de la sección 2 está visible
     );
 
-    if (blueSectionRef.current) {
-      observer.observe(blueSectionRef.current);
+    if (secondSectionRef.current) {
+      observer.observe(secondSectionRef.current);
     }
 
     return () => {
-      if (blueSectionRef.current) {
-        observer.unobserve(blueSectionRef.current);
+      if (secondSectionRef.current) {
+        observer.unobserve(secondSectionRef.current);
+      }
+    };
+  }, []);
+
+  // Observador para detectar cuando la sección 1 vuelve a entrar
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          console.log("Sección 1 activa de nuevo");
+          setIsSection2Active(false);
+          setVideoSrc("/video.mp4"); // Regresa al fondo original
+        }
+      },
+      { root: null, threshold: 0.6 }
+    );
+
+    if (firstSectionRef.current) {
+      observer.observe(firstSectionRef.current);
+    }
+
+    return () => {
+      if (firstSectionRef.current) {
+        observer.unobserve(firstSectionRef.current);
       }
     };
   }, []);
@@ -49,30 +75,32 @@ const PageContent: React.FC = () => {
       <BackgroundVideo videoSrc={videoSrc} />
 
       {/* Primera sección - Contenido sobre el video */}
-      <div className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-white/40 backdrop-blur-md text-center">
-        <h1 className="text-4xl font-bold text-gray-900">Contenido sobre el video</h1>
+      <div
+        ref={firstSectionRef}
+        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-white/40 backdrop-blur-md text-center"
+      >
+        <h1 className="text-4xl font-bold text-gray-900">Sección 1</h1>
         <p className="text-lg max-w-xl mt-4 text-gray-700">
           Este contenido pasa sobre el video de fondo.
         </p>
       </div>
 
-      {/* Segunda sección - No cambia el video aquí */}
-      <div 
-        ref={blueSectionRef}
-         className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-gray-800 text-center text-white">
-        <h2 className="text-3xl font-semibold">Nueva Sección</h2>
+      {/* Segunda sección - Puente que cambia el video */}
+      <div
+        ref={secondSectionRef}
+        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-gray-800/20 text-center text-white"
+      >
+        <h2 className="text-3xl font-semibold">Sección 2 (Puente)</h2>
         <p className="text-lg max-w-xl mt-4">
-          Esta sección aparece cuando sigues haciendo scroll.
+          Al pasar por esta sección, el fondo cambia.
         </p>
       </div>
 
-      {/* Sección Azul - Cambia el video cuando se muestra */}
-      <div 
-        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-blue-500/40 backdrop-blur-md text-center text-white"
-      >
-        <h2 className="text-3xl font-semibold">Otra Sección</h2>
+      {/* Sección 3 - Mantiene el último video */}
+      <div className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-blue-500/40 backdrop-blur-md text-center text-white">
+        <h2 className="text-3xl font-semibold">Sección 3</h2>
         <p className="text-lg max-w-xl mt-4">
-          Esto confirma que el contenido sigue fluyendo sobre el video.
+          Esta sección mantiene el fondo de la sección 2.
         </p>
       </div>
     </div>
