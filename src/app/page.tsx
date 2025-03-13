@@ -3,6 +3,41 @@
 import { useEffect, useState, useRef } from "react";
 import "./../styles/styles.css";
 
+// Componente Navbar
+const Navbar: React.FC = () => {
+  const [scrolled, setScrolled] = useState(false);
+  
+  useEffect(() => {
+    const handleNavbarScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    
+    window.addEventListener("scroll", handleNavbarScroll);
+    return () => {
+      window.removeEventListener("scroll", handleNavbarScroll);
+    };
+  }, []);
+  
+  return (
+    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+      scrolled ? "bg-black/70 backdrop-blur-md py-3" : "bg-transparent py-5"
+    }`}>
+      <div className="container mx-auto px-6 flex justify-between items-center">
+        <div className="text-white font-bold text-xl">Logo</div>
+        <ul className="flex space-x-6">
+          <li><a href="#section1" className="text-white hover:text-gray-300 transition">Inicio</a></li>
+          <li><a href="#section2" className="text-white hover:text-gray-300 transition">Puente</a></li>
+          <li><a href="#section3" className="text-white hover:text-gray-300 transition">Final</a></li>
+        </ul>
+      </div>
+    </nav>
+  );
+};
+
 const BackgroundVideo: React.FC<{ videoSrc: string }> = ({ videoSrc }) => {
   return (
     <div className="fixed inset-0 w-full h-screen overflow-hidden -z-10">
@@ -73,13 +108,40 @@ const PageContent: React.FC = () => {
     };
   }, [lastScrollY, currentSection]);
 
+  // Función para navegar suavemente a las secciones
+  useEffect(() => {
+    const handleSmoothScroll = (e: MouseEvent) => {
+      const target = e.target as HTMLAnchorElement;
+      if (target.tagName === 'A' && target.hash) {
+        e.preventDefault();
+        const targetId = target.hash.substring(1);
+        const element = document.getElementById(targetId);
+        if (element) {
+          window.scrollTo({
+            top: element.offsetTop,
+            behavior: 'smooth'
+          });
+        }
+      }
+    };
+
+    document.addEventListener('click', handleSmoothScroll);
+    return () => {
+      document.removeEventListener('click', handleSmoothScroll);
+    };
+  }, []);
+
   return (
     <div className="relative z-0">
+      {/* Navbar */}
+      <Navbar />
+      
       {/* Video de fondo dinámico */}
       <BackgroundVideo videoSrc={videoSrc} />
 
       {/* Primera sección */}
       <div
+        id="section1"
         ref={firstSectionRef}
         className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-white/40 backdrop-blur-md text-center"
       >
@@ -91,8 +153,9 @@ const PageContent: React.FC = () => {
 
       {/* Segunda sección - PUENTE */}
       <div
+        id="section2"
         ref={secondSectionRef}
-        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-gray-800/20 text-center text-white"
+        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-black text-center text-white"
       >
         <h2 className="text-3xl font-semibold">Sección 2 (Puente)</h2>
         <p className="text-lg max-w-xl mt-4">
@@ -102,6 +165,7 @@ const PageContent: React.FC = () => {
 
       {/* Sección 3 - Mantiene el fondo cambiado */}
       <div
+        id="section3"
         ref={thirdSectionRef}
         className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-blue-500/40 backdrop-blur-md text-center text-white"
       >
