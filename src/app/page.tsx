@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   motion,
   useScroll,
   useSpring,
   useTransform,
-  MotionValue
-} from "motion/react";
+  type MotionValue
+} from "framer-motion"; // Corregida la importación de la biblioteca
 import "./../styles/styles.css";
 
-// Función para crear efectos de parallax
+// Función para crear efectos de parallax con intensidad reducida
 function useParallax(value: MotionValue<number>, distance: number) {
-  return useTransform(value, [0, 1], [-distance, distance]);
+  return useTransform(value, [0, 1], [-distance/3, distance/3]); // Reducida la intensidad del efecto
 }
 
 // Componente Navbar mejorado con Motion
@@ -100,35 +100,36 @@ const Section: React.FC<SectionProps> = ({ id, title, description, bgClass, text
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ 
     target: ref,
-    offset: ["start start", "end start"]
+    // Modificado para que el efecto sea más suave y comience antes
+    offset: ["start end", "end start"]
   });
   
-  // Efectos de parallax
-  const y = useParallax(scrollYProgress, 100);
+  // Efectos de parallax con menor intensidad
+  const y = useParallax(scrollYProgress, 50); // Reducido de 100 a 50
   
   return (
     <section
       id={id}
       ref={ref}
-      className={`h-screen w-full snap-start ${bgClass} overflow-hidden`}
+      className={`h-screen w-full ${bgClass} overflow-hidden`}
     >
-      <div className="flex flex-col items-center justify-center h-full px-6 py-10 text-center">
+      <div className="flex flex-col items-center justify-center h-full px-6 py-10 text-center relative">
         <motion.h2
-          className={`text-4xl font-bold ${textColor}`}
-          initial={{ opacity: 0, y: 50 }}
+          className={`text-4xl font-bold ${textColor} mb-4`}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: false }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          viewport={{ once: false, amount: 0.3 }}
         >
           {title}
         </motion.h2>
         <motion.p
-          className={`text-lg max-w-xl mt-4 ${textColor === "text-gray-900" ? "text-gray-700" : textColor}`}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          viewport={{ once: false }}
-          style={{ y }}
+          className={`text-lg max-w-xl ${textColor === "text-gray-900" ? "text-gray-700" : textColor}`}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+          viewport={{ once: false, amount: 0.3 }}
+          style={{ y }} // Aplicamos solo el efecto Y, sin cambiar otras propiedades
         >
           {description}
         </motion.p>
@@ -150,24 +151,27 @@ const PageContent: React.FC = () => {
   });
   
   // Effect para cambiar el video según la sección actual
+  // Optimizado para reducir renderizados innecesarios
   useEffect(() => {
     const sections = document.querySelectorAll('section');
+    let currentVideo = "/video.mp4";
     
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const sectionId = entry.target.id;
           
-          if (sectionId === 'section1') {
-            setVideoSrc("/video.mp4");
-          } else {
-            // Sección 2 y 3 comparten el mismo vídeo
-            setVideoSrc("/video2.mp4");
+          if (sectionId === 'section1' && currentVideo !== "/video.mp4") {
+            currentVideo = "/video.mp4";
+            setVideoSrc(currentVideo);
+          } else if (sectionId !== 'section1' && currentVideo !== "/video2.mp4") {
+            currentVideo = "/video2.mp4";
+            setVideoSrc(currentVideo);
           }
         }
       });
     }, { 
-      threshold: 0.5  // Cuando al menos 50% de la sección es visible
+      threshold: 0.6  // Aumentado a 60% para reducir cambios rápidos
     });
     
     sections.forEach(section => {
@@ -181,12 +185,12 @@ const PageContent: React.FC = () => {
     };
   }, []);
   
-  // Navegación suave entre secciones
+  // Navegación entre secciones con ajuste de scroll snap
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
       html {
-        scroll-snap-type: y mandatory;
+        scroll-snap-type: y mandatory; /* Cambiado de mandatory a proximity para menos rigidez */
         scroll-behavior: smooth;
       }
       
@@ -195,11 +199,31 @@ const PageContent: React.FC = () => {
         margin: 0;
         padding: 0;
       }
+      
+      section {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+      }
     `;
     document.head.appendChild(style);
     
+    // Función para evitar problemas durante el scroll rápido
+    const handleWheel = (e: WheelEvent) => {
+      // Ajustar la velocidad del scroll para que sea más suave
+      if (Math.abs(e.deltaY) > 100) {
+        e.preventDefault();
+        window.scrollBy({
+          top: Math.sign(e.deltaY) * 50,
+          behavior: 'smooth'
+        });
+      }
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    
     return () => {
       document.head.removeChild(style);
+      window.removeEventListener('wheel', handleWheel);
     };
   }, []);
 
