@@ -1,9 +1,21 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+  MotionValue
+} from "motion/react";
 import "./../styles/styles.css";
 
-// Componente Navbar
+// Función para crear efectos de parallax
+function useParallax(value: MotionValue<number>, distance: number) {
+  return useTransform(value, [0, 1], [-distance, distance]);
+}
+
+// Componente Navbar mejorado con Motion
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   
@@ -23,157 +35,211 @@ const Navbar: React.FC = () => {
   }, []);
   
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-      scrolled ? "bg-black/70 backdrop-blur-md py-3" : "bg-transparent py-5"
-    }`}>
+    <motion.nav
+      className={`fixed top-0 left-0 w-full z-50 ${
+        scrolled ? "bg-black/70 backdrop-blur-md" : "bg-transparent"
+      }`}
+      initial={{ y: -100 }}
+      animate={{ 
+        y: 0,
+        padding: scrolled ? "0.75rem 0" : "1.25rem 0"
+      }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="container mx-auto px-6 flex justify-between items-center">
-        <div className="text-white font-bold text-xl">Logo</div>
+        <motion.div 
+          className="text-white font-bold text-xl"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        >
+          Logo
+        </motion.div>
         <ul className="flex space-x-6">
-          <li><a href="#section1" className="text-white hover:text-gray-300 transition">Inicio</a></li>
-          <li><a href="#section2" className="text-white hover:text-gray-300 transition">Puente</a></li>
-          <li><a href="#section3" className="text-white hover:text-gray-300 transition">Final</a></li>
+          <motion.li whileHover={{ y: -2 }}>
+            <a href="#section1" className="text-white hover:text-gray-300 transition">Inicio</a>
+          </motion.li>
+          <motion.li whileHover={{ y: -2 }}>
+            <a href="#section2" className="text-white hover:text-gray-300 transition">Puente</a>
+          </motion.li>
+          <motion.li whileHover={{ y: -2 }}>
+            <a href="#section3" className="text-white hover:text-gray-300 transition">Final</a>
+          </motion.li>
         </ul>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 
+// Componente de vídeo de fondo con Motion
 const BackgroundVideo: React.FC<{ videoSrc: string }> = ({ videoSrc }) => {
   return (
-    <div className="fixed inset-0 w-full h-screen overflow-hidden -z-10">
+    <motion.div 
+      className="fixed inset-0 w-full h-screen overflow-hidden -z-10"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1 }}
+    >
       <video className="w-full h-full object-cover" autoPlay loop muted playsInline key={videoSrc}>
         <source src={videoSrc} type="video/mp4" />
         Tu navegador no soporta el video.
       </video>
-    </div>
+    </motion.div>
+  );
+};
+
+// Componente de sección para cada pantalla completa
+interface SectionProps {
+  id: string;
+  title: string;
+  description: string;
+  bgClass: string;
+  textColor?: string;
+}
+
+const Section: React.FC<SectionProps> = ({ id, title, description, bgClass, textColor = "text-gray-900" }) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ 
+    target: ref,
+    offset: ["start start", "end start"]
+  });
+  
+  // Efectos de parallax
+  const y = useParallax(scrollYProgress, 100);
+  
+  return (
+    <section
+      id={id}
+      ref={ref}
+      className={`h-screen w-full snap-start ${bgClass} overflow-hidden`}
+    >
+      <div className="flex flex-col items-center justify-center h-full px-6 py-10 text-center">
+        <motion.h2
+          className={`text-4xl font-bold ${textColor}`}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: false }}
+        >
+          {title}
+        </motion.h2>
+        <motion.p
+          className={`text-lg max-w-xl mt-4 ${textColor === "text-gray-900" ? "text-gray-700" : textColor}`}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: false }}
+          style={{ y }}
+        >
+          {description}
+        </motion.p>
+      </div>
+    </section>
   );
 };
 
 const PageContent: React.FC = () => {
   const [videoSrc, setVideoSrc] = useState("/video.mp4");
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [currentSection, setCurrentSection] = useState<"section1" | "section2" | "section3">("section1");
-
-  const firstSectionRef = useRef<HTMLDivElement | null>(null);
-  const secondSectionRef = useRef<HTMLDivElement | null>(null);
-  const thirdSectionRef = useRef<HTMLDivElement | null>(null);
-
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  // Scroll progress para la barra de progreso
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+  
+  // Effect para cambiar el video según la sección actual
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const direction = scrollY > lastScrollY ? "down" : "up"; // Determina dirección de navegación
-
-      // Obtiene la posición de cada sección
-      const section1Top = firstSectionRef.current?.offsetTop ?? 0;
-      const section2Top = secondSectionRef.current?.offsetTop ?? 0;
-      const section3Top = thirdSectionRef.current?.offsetTop ?? 0;
-      const windowHeight = window.innerHeight;
-
-      if (direction === "down") {
-        if (scrollY >= section2Top && scrollY < section3Top) {
-          if (currentSection !== "section2") {
-            console.log("Entrando en la Sección 2");
-            setCurrentSection("section2");
-            setVideoSrc("/video2.mp4");
-          }
-        } else if (scrollY >= section3Top - 1) {
-          if (currentSection !== "section3") {
-            console.log("Entrando en la Sección 3");
-            setCurrentSection("section3");
-            setVideoSrc("/video2.mp4"); // La Sección 3 mantiene el video de la Sección 2
-          }
-        }
-      } else {
-        if (scrollY < section2Top) {
-          if (currentSection !== "section1") {
-            console.log("Volviendo a la Sección 1");
-            setCurrentSection("section1");
+    const sections = document.querySelectorAll('section');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.id;
+          
+          if (sectionId === 'section1') {
             setVideoSrc("/video.mp4");
-          }
-        } else if (scrollY >= section2Top && scrollY < section3Top) {
-          if (currentSection !== "section2") {
-            console.log("Volviendo a la Sección 2");
-            setCurrentSection("section2");
+          } else {
+            // Sección 2 y 3 comparten el mismo vídeo
             setVideoSrc("/video2.mp4");
           }
         }
-      }
-
-      setLastScrollY(scrollY); // Guarda la última posición del scroll
-    };
-
-    window.addEventListener("scroll", handleScroll);
+      });
+    }, { 
+      threshold: 0.5  // Cuando al menos 50% de la sección es visible
+    });
+    
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+    
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      sections.forEach(section => {
+        observer.unobserve(section);
+      });
     };
-  }, [lastScrollY, currentSection]);
-
-  // Función para navegar suavemente a las secciones
+  }, []);
+  
+  // Navegación suave entre secciones
   useEffect(() => {
-    const handleSmoothScroll = (e: MouseEvent) => {
-      const target = e.target as HTMLAnchorElement;
-      if (target.tagName === 'A' && target.hash) {
-        e.preventDefault();
-        const targetId = target.hash.substring(1);
-        const element = document.getElementById(targetId);
-        if (element) {
-          window.scrollTo({
-            top: element.offsetTop,
-            behavior: 'smooth'
-          });
-        }
+    const style = document.createElement('style');
+    style.textContent = `
+      html {
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
       }
-    };
-
-    document.addEventListener('click', handleSmoothScroll);
+      
+      body {
+        overflow-y: scroll;
+        margin: 0;
+        padding: 0;
+      }
+    `;
+    document.head.appendChild(style);
+    
     return () => {
-      document.removeEventListener('click', handleSmoothScroll);
+      document.head.removeChild(style);
     };
   }, []);
 
   return (
-    <div className="relative z-0">
+    <div className="relative z-0" ref={containerRef}>
       {/* Navbar */}
       <Navbar />
       
       {/* Video de fondo dinámico */}
       <BackgroundVideo videoSrc={videoSrc} />
+      
+      {/* Barra de progreso */}
+      <motion.div 
+        className="fixed left-0 bottom-10 right-0 h-1 bg-white z-50"
+        style={{ scaleX, transformOrigin: "0%" }}
+      />
 
-      {/* Primera sección */}
-      <div
+      {/* Secciones */}
+      <Section 
         id="section1"
-        ref={firstSectionRef}
-        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-white/40 backdrop-blur-md text-center"
-      >
-        <h1 className="text-4xl font-bold text-gray-900">Sección 1</h1>
-        <p className="text-lg max-w-xl mt-4 text-gray-700">
-          Este contenido pasa sobre el video de fondo.
-        </p>
-      </div>
+        title="Sección 1"
+        description="Este contenido pasa sobre el video de fondo."
+        bgClass="bg-white/40 backdrop-blur-md"
+      />
 
-      {/* Segunda sección - PUENTE */}
-      <div
+      <Section 
         id="section2"
-        ref={secondSectionRef}
-        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-black text-center text-white"
-      >
-        <h2 className="text-3xl font-semibold">Sección 2 (Puente)</h2>
-        <p className="text-lg max-w-xl mt-4">
-          Al cruzar esta sección, el fondo cambiará permanentemente hasta regresar a la Sección 1.
-        </p>
-      </div>
+        title="Sección 2 (Puente)"
+        description="Al cruzar esta sección, el fondo cambiará permanentemente hasta regresar a la Sección 1."
+        bgClass="bg-black"
+        textColor="text-white"
+      />
 
-      {/* Sección 3 - Mantiene el fondo cambiado */}
-      <div
+      <Section 
         id="section3"
-        ref={thirdSectionRef}
-        className="relative flex flex-col items-center justify-center min-h-screen px-6 py-10 bg-blue-500/40 backdrop-blur-md text-center text-white"
-      >
-        <h2 className="text-3xl font-semibold">Sección 3</h2>
-        <p className="text-lg max-w-xl mt-4">
-          Esta sección hereda el fondo de la Sección 2, nunca vuelve al de la Sección 1.
-        </p>
-      </div>
+        title="Sección 3"
+        description="Esta sección hereda el fondo de la Sección 2, nunca vuelve al de la Sección 1."
+        bgClass="bg-blue-500/40 backdrop-blur-md"
+        textColor="text-white"
+      />
     </div>
   );
 };
